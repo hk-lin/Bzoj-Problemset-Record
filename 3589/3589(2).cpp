@@ -3,7 +3,7 @@
 #define clr_1(x) memset(x,-1,sizeof(x))
 #define LL long long
 using namespace std;
-const int N=2e5+10;
+const int N=1e5+10;
 const LL mod=2147483648;
 struct edg
 {
@@ -16,20 +16,20 @@ void addedge(int u,int v)
     head[u]=ecnt;
     return ;
 }
+LL p;
 int n,m,q,T,u,v,cnt,k;
-LL p,ans;
 int fa[N],top[N],num[N],son[N],deep[N],dfstm[N],pre[N],last[N];
-vector<int> pt;
+LL cal[100];
+int ptu[10],ptv[10];
 int op;
-struct Seg//带有求和和的线段树
+struct Seg//带有求和和求最大值的线段树
 {
     int l,r;
     LL sum,tag;
-    LL cover;
-}seg[N<<3];
+}seg[N<<2];
 void init(int i,int l,int r)//初始化线段树
 {
-    seg[i]=(Seg){l,r,0,0,0};
+    seg[i]=(Seg){l,r,0,0};
     if(l==r)
     {
         return ;
@@ -59,7 +59,7 @@ void update(int i,int l,int r,LL val)//更新[l,r]的权值带来sum改变
     if(seg[i].l>=l && seg[i].r<=r)
     {
         seg[i].tag=(seg[i].tag+val)%mod;
-        seg[i].sum=(seg[i].sum+((seg[i].r-seg[i].l+1)*val%mod))%mod;
+        seg[i].sum=(seg[i].sum+(seg[i].r-seg[i].l+1)*val%mod)%mod;
         return ;
     }
     pushdown(i);
@@ -77,36 +77,23 @@ void update(int i,int l,int r,LL val)//更新[l,r]的权值带来sum改变
 }
 LL querysum(int i,int l,int r)//询问一个线段树区间[L,R]的和
 {
-//    cout<<seg[i].l<<" "<<seg[i].r<<" "<<seg[i].sum<<" "<<seg[i].cover<<endl;
-    if(seg[i].l>=l && seg[i].r<=r)
+    if(seg[i].l>=l &&seg[i].r<=r)
     {
-        LL p=(seg[i].sum-seg[i].cover+mod)%mod;
-        seg[i].cover=seg[i].sum;
-        pt.push_back(i);
-        return p;
+        return seg[i].sum;
     }
     pushdown(i);
-    if(seg[i].cover==seg[i].sum)
-    {
-        seg[i<<1].cover=seg[i<<1].sum;
-        seg[i<<1|1].cover=seg[i<<1|1].sum;
-    }
     LL ans=0;
     int mid=(seg[i].l+seg[i].r)>>1;
     if(mid>=l)
         ans=(ans+querysum(i<<1,l,r))%mod;
     if(mid<r)
         ans=(ans+querysum(i<<1|1,l,r))%mod;
-    if(seg[i].l!=seg[i].r)
-        seg[i].cover=(seg[i<<1].cover+seg[i<<1|1].cover)%mod;
-//    cout<<seg[i].l<<" "<<seg[i].r<<" "<<seg[i].sum<<" "<<seg[i].cover<<endl;
     return ans;
 }
 LL querys(int u,int v)//询问树上u到v的和
 {
     int tpu=top[u],tpv=top[v];
     LL ans=0;
-//    cout<<u<<" "<<v<<" ";
     while(tpu!=tpv)
     {
         if(deep[tpu]<deep[tpv])
@@ -120,24 +107,7 @@ LL querys(int u,int v)//询问树上u到v的和
     }
     if(deep[u]<deep[v]) swap(u,v);
     ans=(ans+querysum(1,pre[v],pre[u]))%mod;
-//    cout<<ans<<endl;
     return ans;
-}
-void del()
-{
-    int len=pt.size(),p;
-    for(int i=0;i<len;i++)
-    {
-        p=pt[i];
-        while(p!=0)
-        {
-            seg[p<<1].cover=0;
-            seg[p<<1|1].cover=0;
-            seg[p].cover=0;
-            p>>=1;
-        }
-    }
-    return ;
 }
 void inito()
 {
@@ -145,6 +115,19 @@ void inito()
     clr_1(son);
     ecnt=0;
     cnt=0;
+    cal[0]=-1;
+    for(int i=1;i<=100;i++)
+    {
+        if(i&1)
+        {
+            if(cal[i>>1]==1)
+                cal[i]=-1;
+            else
+                cal[i]=1;
+        }
+        else
+            cal[i]=cal[i>>1];
+    }
     return ;
 }
 void dfs1(int u,int pre,int dep)
@@ -183,15 +166,69 @@ void dfs2(int u,int tp)
     last[u]=cnt;
     return ;
 }
+int lca(int u,int v)
+{
+    int tpu=top[u],tpv=top[v];
+    while(tpu!=tpv)
+    {
+        if(deep[tpu]<deep[tpv])
+        {
+            swap(tpu,tpv);
+            swap(u,v);
+        }
+        u=fa[tpu];
+        tpu=top[u];
+    }
+    if(deep[u]<deep[v])
+        return u;
+    else
+        return v;
+}
+LL deal(int x)
+{
+    LL res=0;
+    int u=0,v=0,i=1;
+    while(x)
+    {
+        if(x&1)
+        {
+            if(u==0)
+            {
+                u=ptu[i];
+                v=ptv[i];
+            }
+            else
+            {
+                u=lca(u,ptu[i]);
+                if(deep[u]<deep[ptv[i]]|| deep[u]<deep[v])
+                {
+                    u=v=-1;
+                }
+                else
+                {
+                    v=deep[v]>deep[ptv[i]]?deep[v]:deep[ptv[i]];
+                }
+                if(u==-1)
+                    return 0;
+            }
+        }
+        x>>=1;
+        i++;
+    }
+    return querys(u,v);
+}
+LL cale(int k)
+{
+    int p=1<<k;
+    LL ans=0;
+    for(int i=0;i<p;i++)
+    {
+        ans=(ans+deal(i)*cal[i]%mod)%mod;
+    }
+    return (ans%mod+mod)%mod;
+}
 int main()
 {
-    int digit[200]={0};
-    for(int i=1;i<1<<5;i++)
-    {
-        digit[i]=digit[i>>1]+(i&1);
-        cout<<digit[i]<<" ";
-    }
-    cout<<endl;
     scanf("%d",&n);
     inito();
     for(int i=1;i<n;i++)
@@ -204,9 +241,6 @@ int main()
     dfs2(1,1);
     init(1,1,n);
     scanf("%d",&q);
-//    for(int i=1;i<=n;i++)
-//        printf("%d ",dfstm[i]);
-//    printf("\n");
     for(int i=1;i<=q;i++)
     {
         scanf("%d",&op);
@@ -218,15 +252,14 @@ int main()
         else
         {
             scanf("%d",&k);
-            ans=0;
-            pt.clear();
             for(int j=1;j<=k;j++)
             {
                 scanf("%d%d",&u,&v);
-                ans=(ans+querys(u,v))%mod;
+                if(deep[u]<deep[v])
+                    swap(u,v);
+                ptu[j]=u,ptv[j]=v;
             }
-            printf("%lld\n",ans);
-            del();
+            printf("%lld\n",cale(k));
         }
     }
     return 0;
