@@ -25,7 +25,7 @@ int op;
 struct Seg//带有求和和求最大值的线段树
 {
     int l,r;
-    LL sum,tag;
+    LL tag,sum;
 }seg[N<<2];
 void init(int i,int l,int r)//初始化线段树
 {

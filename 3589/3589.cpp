@@ -185,13 +185,6 @@ void dfs2(int u,int tp)
 }
 int main()
 {
-    int digit[200]={0};
-    for(int i=1;i<1<<5;i++)
-    {
-        digit[i]=digit[i>>1]+(i&1);
-        cout<<digit[i]<<" ";
-    }
-    cout<<endl;
     scanf("%d",&n);
     inito();
     for(int i=1;i<n;i++)

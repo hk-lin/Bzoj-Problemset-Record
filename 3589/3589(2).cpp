@@ -3,7 +3,7 @@
 #define clr_1(x) memset(x,-1,sizeof(x))
 #define LL long long
 using namespace std;
-const int N=1e5+10;
+const int N=2e5+10;
 const LL mod=2147483648;
 struct edg
 {
@@ -206,7 +206,7 @@ LL deal(int x)
                 }
                 else
                 {
-                    v=deep[v]>deep[ptv[i]]?deep[v]:deep[ptv[i]];
+                    v=deep[v]>deep[ptv[i]]?v:ptv[i];
                 }
                 if(u==-1)
                     return 0;
