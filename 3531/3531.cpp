@@ -5,7 +5,7 @@
 #define mod 1000000007
 using namespace std;
 const int N=2e5+10;
-const int M=1e7+10;
+const int M=5e6+10;
 struct edg
 {
     int next,to;
